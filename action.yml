@@ -37,6 +37,15 @@ runs:
             },
             body: JSON.stringify({ id_token: token })
           })
+          if (!res.ok) {
+            let msg = `HTTP ${res.status} ${res.statusText}`;
+            try {
+              const data = await res.json()
+              msg = data.error_description || JSON.stringify(data)
+            } catch (e) {
+            }
+            throw new Error(`Failed to obtain access token from registry: ${msg}`)
+          }
           const data = await res.json()
           core.setOutput('access_token', data.access_token)
 
