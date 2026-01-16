@@ -44,7 +44,7 @@ runs:
               msg = data.error_description || JSON.stringify(data)
             } catch (e) {
             }
-            throw new Error(`Failed to obtain access token from registry: ${msg}`)
+            throw new Error(`${registry}: ${msg}`)
           }
           const data = await res.json()
           core.setOutput('access_token', data.access_token)
