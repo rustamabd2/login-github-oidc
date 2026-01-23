@@ -27,30 +27,19 @@ permissions:
   uses: rustamabd2/login-github-oidc@v1
 ```
 
-### Custom registry
-
-```yaml
-- name: Login to custom CUE registry
-  uses: rustamabd2/login-github-oidc@v1
-  with:
-    registry: reg.rustyx.org
-```
-
 ### Using the access token
 
 The action outputs an `access_token` that can be used for direct API calls:
 
 ```yaml
 - name: Login to CUE registry
-  id: cue-login
+  id: oidc
   uses: rustamabd2/login-github-oidc@v1
-  with:
-    registry: reg.rustyx.org
 
 - name: Test registry access
   run: |
-    curl -sSL https://reg.rustyx.org/v2/ \
-      -H "Authorization: Bearer ${{ steps.cue-login.outputs.access_token }}"
+    curl -sSL https://registry.cue.works/v2/ \
+      -H "Authorization: Bearer ${{ steps.oidc.outputs.access_token }}"
 ```
 
 ## Inputs
@@ -58,6 +47,7 @@ The action outputs an `access_token` that can be used for direct API calls:
 | Input | Description | Required | Default |
 |-------|-------------|----------|---------|
 | `registry` | CUE registry hostname | No | `registry.cue.works` |
+| `update_logins` | Whether to update the local CUE logins.json file | No | `true` |
 
 ## Outputs
 
@@ -69,7 +59,7 @@ The action outputs an `access_token` that can be used for direct API calls:
 
 1. Obtains a GitHub OIDC token with the registry URL as the audience
 2. Exchanges the OIDC token for a registry access token via `/login/oidc/github` endpoint
-3. Configures the `cue` CLI with the registry credentials in `~/.config/cue/logins.json`
+3. Optionally configures the `cue` CLI with the registry credentials in `~/.config/cue/logins.json`
 
 ## Requirements
 
@@ -95,7 +85,10 @@ jobs:
     
     steps:
       - uses: actions/checkout@v4
-      
+
+      - name: Login to CUE registry
+        uses: rustamabd2/login-github-oidc@v1
+
       - name: Install Go
         uses: actions/setup-go@v6
         with:
@@ -104,14 +97,9 @@ jobs:
       - name: Install Cue
         run: go install cuelang.org/go/cmd/cue@latest
       
-      - name: Login to CUE registry
-        uses: rustamabd2/login-github-oidc@v1
-        with:
-          registry: reg.rustyx.org
-      
       - name: Publish module
         run: |
-          CUE_REGISTRY=reg.rustyx.org cue mod publish ${{ github.ref_name }}
+          cue mod publish ${{ github.ref_name }}
 ```
 
 ## License
